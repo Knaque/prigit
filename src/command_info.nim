@@ -13,7 +13,7 @@ Available commands:
   push
     Pushes the changes of the current repository."""
 
-const create_help* = """Create Git repositories.
+const create_info* = """Create Git repositories.
 
 Usage:
   prigit create <name>

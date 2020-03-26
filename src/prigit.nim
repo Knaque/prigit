@@ -1,45 +1,68 @@
-import os, osproc, parsecfg, strutils
-import command_info
+import os, parsecfg, parseopt, osproc # standard library
+import asyncssh # nimble modules
+import command_info # custom module(s)
 
+type
+  Action = enum
+    None, Create, Commit, Push, Pull
 
+  Repo = ref object
+    name: string
+    dir: string
+
+proc getCurrentDirOnly: string =
+  let current_dir = getCurrentDir()
+  var last_slash = 0
+  for i, c in current_dir:
+    if c == '/': last_slash = i
+    result = current_dir[last_slash+1..current_dir.len.pred]
 
 let config = loadConfig(expandTilde("~/.prigit/prigit.cfg"))
 
-# Check for any arguments; If none, echo help message
-try:
-  discard paramStr(1)
-except IndexError:
-  echo main_info
-  quit 0
-
-case paramStr(1).toLowerAscii
-of "create":
-  try:
-    let repo_name = paramStr(2)
-    let repo_dir = getCurrentDir() & '/' & repo_name
-    case existsOrCreateDir(repo_dir)
-    of true: echo "Directory " & repo_dir & " already exists!"
-    else:
-      echo "Created directory " & repo_dir & '\n'
-      echo execProcess("git init", repo_dir)
-      let remote_dir = config.getSectionValue("", "sshPrefix") & '@' & config.getSectionValue("", "homeIP") & ':' & config.getSectionValue("", "gitFolder")
-      discard execProcess("git remote add " & repo_name & ' ' & remote_dir, repo_dir)
-      echo "Added remote ref\n"
-      writeFile(repo_dir & "/README.md", "# " & repo_name)
-      echo "Created README.md"
-  except IndexError:
-    echo create_help
-of "commit":
-  let repo = getCurrentDir()
-  echo execProcess("git add .", repo)
-  if commandLineParams().len > 1: echo execProcess("git commit -m " & '"' & paramStr(2) & '"', repo)
-  else: echo execProcess("git commit", repo)
-of "push":
-  let repo = getCurrentDir()
-  var repo_name: string
-  for i, c in repo:
-    var last_slash = 0
-    if c == '/': last_slash = i
-    repo_name = repo[last_slash+1..repo.len.pred]
+var
+  args = initOptParser(commandLineParams())
   
-  echo execProcess("git push " & repo_name & ' ' & "master")
+  action: Action
+  repo = Repo(name:getCurrentDirOnly())
+  username = config.getSectionValue("", "sshPrefix")
+  ip = config.getSectionValue("", "globalIP")
+
+for arg in getopt(args):
+  case arg.kind
+  of cmdArgument:
+    case arg.key
+      of "create": action = Create
+      of "commit": action = Commit
+      of "push": action = Push
+      of "pull": action = Pull
+  of cmdLongOption:
+    case arg.key
+      of "name": repo.name = arg.val
+      of "home": ip = config.getSectionValue("", "homeIP")
+  of cmdShortOption:
+    case arg.key
+      of "n": repo.name = arg.val
+      of "h": ip = config.getSectionValue("", "homeIP")
+  of cmdEnd: discard
+
+var address = config.getSectionValue("", "sshPrefix") & '@' & ip
+
+repo.dir = config.getSectionValue("", "gitFolder") & '/' & repo.name
+
+case action
+of Create:
+  discard execSSHCmd(username, ip, "echo hello")
+  # echo server.command("mkdir -p " & repo.dir & ".git")
+  # echo server.command("cd " & repo.dir & ".git")
+  # echo server.command("git init --bare")
+
+  let working_dir = getCurrentDir() & '/' & repo.name
+  echo execProcess("mkdir -p " & working_dir)
+  echo execProcess("git init", working_dir)
+  echo execProcess("git remote add " & repo.name & ' ' & address & ':' & repo.dir)
+of Commit: discard
+of Push: discard
+of Pull: discard
+of None: echo main_info
+
+# server.exit()
