@@ -9,7 +9,7 @@ These instructions assume you already have SSH working on your server, with SSH 
 Prigit will **not** work *at all* without SSH keys, and it will not work remotely without port 22 open.
 
 0. First, make sure your system supports the `amd64` architecture.
-Then, make sure you have Git installed. `git --version`
+Then, make sure you have Git installed on both the client and server. `git --version`
 1. Download the installer .zip from the Releases tab, and unzip it.
 2. You can go ahead and edit `prigit.cfg` now, if you'd like. Fill each field with the appropriate information, then save it.
 3. Run `installer.sh` in `sudo`. You *must* be in `sudo` in order for it to work.
