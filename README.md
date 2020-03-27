@@ -32,8 +32,4 @@ Pulls any changes from the server.
 - -h/--home | `prigit <command> -h`:
 If you're connected to the same network as the server, you *must* use this flag. The only exception is for the commit command, since the flag serves no function.
 
-<<<<<<< HEAD
 [asyncssh module by treeform](https://github.com/treeform/asyncssh), thank you very much for your help!
-=======
-[asyncssh module by treeform](https://github.com/treeform/asyncssh), thank you very much for your help!
->>>>>>> master
