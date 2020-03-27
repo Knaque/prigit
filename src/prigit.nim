@@ -1,6 +1,7 @@
-import os, parsecfg, parseopt, osproc # standard library
-import asyncssh # nimble modules
-import command_info # custom module(s)
+import os, parsecfg, parseopt, osproc, asyncdispatch, elvis
+import asyncssh, command_info
+
+const version = "1.0.0"
 
 type
   Action = enum
@@ -10,12 +11,12 @@ type
     name: string
     dir: string
 
-proc getCurrentDirOnly: string =
-  let current_dir = getCurrentDir()
-  var last_slash = 0
-  for i, c in current_dir:
-    if c == '/': last_slash = i
-    result = current_dir[last_slash+1..current_dir.len.pred]
+  UsedIp = enum
+    Home, Global
+  Ip = ref object
+    home: string
+    global: string
+    used: UsedIp
 
 let config = loadConfig(expandTilde("~/.prigit/prigit.cfg"))
 
@@ -23,9 +24,9 @@ var
   args = initOptParser(commandLineParams())
   
   action: Action
-  repo = Repo(name:getCurrentDirOnly())
-  username = config.getSectionValue("", "sshPrefix")
-  ip = config.getSectionValue("", "globalIP")
+  repo = Repo(name: "")
+  ip = Ip(home: config.getSectionValue("", "homeIP"), global: config.getSectionValue("", "globalIP"), used: Global)
+  commit_message: string
 
 for arg in getopt(args):
   case arg.kind
@@ -38,31 +39,49 @@ for arg in getopt(args):
   of cmdLongOption:
     case arg.key
       of "name": repo.name = arg.val
-      of "home": ip = config.getSectionValue("", "homeIP")
+      of "home": ip.used = Home
+      of "msg": commit_message = arg.val
+      of "help": echo main_info; quit 0
+      of "version": echo "Prigit version " & version; quit 0
   of cmdShortOption:
     case arg.key
       of "n": repo.name = arg.val
-      of "h": ip = config.getSectionValue("", "homeIP")
+      of "h": ip.used = Home
+      of "m": commit_message = arg.val
+      of "v": echo "Prigit version " & version; quit 0
   of cmdEnd: discard
 
-var address = config.getSectionValue("", "sshPrefix") & '@' & ip
-
-repo.dir = config.getSectionValue("", "gitFolder") & '/' & repo.name
+let username = config.getSectionValue("", "username")
 
 case action
 of Create:
-  discard execSSHCmd(username, ip, "echo hello")
-  # echo server.command("mkdir -p " & repo.dir & ".git")
-  # echo server.command("cd " & repo.dir & ".git")
-  # echo server.command("git init --bare")
+  case repo.name
+  of "":
+    echo create_info; quit 0
+  else: discard
 
   let working_dir = getCurrentDir() & '/' & repo.name
+
+  repo.dir = config.getSectionValue("", "gitFolder") & '/' & repo.name & ".git"
+
+  echo waitFor execSSHCmd(username, (ip.used == Global ? ip.global ! ip.home), "mkdir -p " & repo.dir & "; " & "cd " & repo.dir & "; " & "git init --bare")
+
   echo execProcess("mkdir -p " & working_dir)
   echo execProcess("git init", working_dir)
-  echo execProcess("git remote add " & repo.name & ' ' & address & ':' & repo.dir)
-of Commit: discard
-of Push: discard
-of Pull: discard
+  echo execProcess("git remote add " & username & "_local " & username & '@' & ip.home & ':' & repo.dir, working_dir)
+  echo execProcess("git remote add " & username & "_remote " & username & '@' & ip.global & ':' & repo.dir, working_dir)
+of Commit:
+  case commit_message
+  of "": echo commit_info; quit 0
+  else:
+    echo execProcess("git add .")
+    echo execProcess("git commit -a -m " & '"' & commit_message & '"')
+of Push:
+  case ip.used
+  of Global: echo execProcess("git push " & username & "_remote master")
+  of Home: echo execProcess("git push " & username & "_local master")
+of Pull:
+  case ip.used
+  of Global: echo execProcess("git pull " & username & "_remote master")
+  of Home: echo execProcess("git pull " & username & "_local master")
 of None: echo main_info
-
-# server.exit()
