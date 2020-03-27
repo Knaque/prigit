@@ -5,6 +5,9 @@ Prigit is **not** designed for production-ready use. If that's what you need, ju
 Prigit has very few safety checks, so ensure that you know what you're doing.
 
 ## Installation:
+These instructions assume you already have SSH working on your server, with SSH keys set up and port 22 already opened.
+Prigit will **not** work *at all* without SSH keys, and it will not work remotely without port 22 open.
+
 0. First, make sure your system supports the `amd64` architecture.
 Then, make sure you have Git installed. `git --version`
 1. Download the installer .zip from the Releases tab, and unzip it.
@@ -29,4 +32,4 @@ Pulls any changes from the server.
 - -h/--home | `prigit <command> -h`:
 If you're connected to the same network as the server, you *must* use this flag. The only exception is for the commit command, since the flag serves no function.
 
-[asyncssh.nim module by treeform](https://github.com/treeform/asyncssh), thank you very much for your help!
+[asyncssh module by treeform](https://github.com/treeform/asyncssh), thank you very much for your help!
