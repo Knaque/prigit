@@ -1,4 +1,5 @@
 ![Prigit Banner](https://knaque.icu/ext/prigit_banner.png "Prigit Banner")
+
 A CLI tool for more easily interacting with home Git servers.
 
 Prigit is **not** designed for production-ready use. If that's what you need, just use regular Git and SSH, as that's all Prigit does behind-the-scenes.
