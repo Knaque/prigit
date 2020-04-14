@@ -25,7 +25,9 @@ var
   
   action: Action
   repo = Repo(name: "")
-  ip = Ip(home: config.getSectionValue("", "homeIP"), global: config.getSectionValue("", "globalIP"), used: Global)
+  ip = Ip(home: config.getSectionValue("", "homeIP"),
+          global: config.getSectionValue("", "globalIP"),
+          used: Global)
   commit_message: string
 
 for arg in getopt(args):
@@ -64,12 +66,17 @@ of Create:
 
   repo.dir = config.getSectionValue("", "gitFolder") & '/' & repo.name & ".git"
 
-  echo waitFor execSSHCmd(username, (ip.used == Global ? ip.global ! ip.home), "mkdir -p " & repo.dir & "; " & "cd " & repo.dir & "; " & "git init --bare")
+  echo waitFor execSSHCmd(username, (ip.used == Global ? ip.global ! ip.home),
+                          "mkdir -p " & repo.dir & "; " &
+                          "cd " & repo.dir & "; " &
+                          "git init --bare")
 
   echo execProcess("mkdir -p " & working_dir)
   echo execProcess("git init", working_dir)
-  echo execProcess("git remote add " & username & "_local " & username & '@' & ip.home & ':' & repo.dir, working_dir)
-  echo execProcess("git remote add " & username & "_remote " & username & '@' & ip.global & ':' & repo.dir, working_dir)
+  echo execProcess("git remote add " & username & "_local " &
+                   username & '@' & ip.home & ':' & repo.dir, working_dir)
+  echo execProcess("git remote add " & username & "_remote " &
+                   username & '@' & ip.global & ':' & repo.dir, working_dir)
 of Commit:
   case commit_message
   of "": echo commit_info; quit 0
