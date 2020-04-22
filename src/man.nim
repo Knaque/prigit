@@ -1,6 +1,6 @@
 # Contains text strings used for help info
 
-const main_info* = """Interact with home Git servers more easily.
+const main* = """Interact with home Git servers more easily.
 
 Usage:
   prigit <command>
@@ -25,14 +25,14 @@ Flags:
   -h/--home
     This flag must be used for every command, except commit, when connected to the same network as the server."""
 
-const create_info* = """Create Git repositories.
+const create* = """Create Git repositories.
 
 Usage:
   create -n/--name:<name>
     Creates a repository with the given [name].
     Example: prigit create --name:helloworld"""
 
-const commit_info* = """Commit to a repository.
+const commit* = """Commit to a repository.
 
 Usage:
   commit -m/--msg:"<message>"
