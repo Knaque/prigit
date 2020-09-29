@@ -1,4 +1,4 @@
-![Prigit Banner](https://knaque.icu/ext/prigit_banner.png "Prigit Banner")
+![Prigit Banner](https://knaque.dev/ext/prigit_banner.png "Prigit Banner")
 
 A CLI tool for more easily interacting with home Git servers.
 
